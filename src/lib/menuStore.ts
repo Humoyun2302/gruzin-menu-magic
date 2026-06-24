@@ -39,14 +39,6 @@ function setState(next: State) {
   emit();
 }
 
-export const menuStore = {
-  subscribe(l: () => void) {
-    listeners.add(l);
-    return () => listeners.delete(l);
-  },
-  getSnapshot(): State {
-    return state;
-  },
 const SERVER_SNAPSHOT: State = { categories: SEED_CATEGORIES, items: SEED_ITEMS };
 
 export const menuStore = {
