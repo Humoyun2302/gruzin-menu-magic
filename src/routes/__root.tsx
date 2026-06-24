@@ -84,6 +84,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:description", content: "Меню грузинского ресторана GRUZIN" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
+      { name: "twitter:title", content: "GRUZIN — Georgian Restaurant" },
+      { name: "twitter:description", content: "Меню грузинского ресторана GRUZIN" },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/4060bf0d-a756-4258-98d6-dd9024985e52/id-preview-ff2b2dd3--9ef2f0e2-8031-497b-9479-1b82301452cd.lovable.app-1782324868320.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/4060bf0d-a756-4258-98d6-dd9024985e52/id-preview-ff2b2dd3--9ef2f0e2-8031-497b-9479-1b82301452cd.lovable.app-1782324868320.png" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
