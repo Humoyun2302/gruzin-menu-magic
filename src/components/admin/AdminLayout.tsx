@@ -3,7 +3,12 @@ import { LayoutDashboard, UtensilsCrossed, Tags, ExternalLink } from "lucide-rea
 import { GruzinLogo } from "@/components/menu/GruzinLogo";
 import { cn } from "@/lib/utils";
 
-const NAV: ReadonlyArray<{ to: "/admin" | "/admin/items" | "/admin/categories"; label: string; icon: typeof LayoutDashboard; exact?: boolean }> = [
+const NAV: ReadonlyArray<{
+  to: "/admin" | "/admin/items" | "/admin/categories";
+  label: string;
+  icon: typeof LayoutDashboard;
+  exact?: boolean;
+}> = [
   { to: "/admin", label: "Дашборд", icon: LayoutDashboard, exact: true },
   { to: "/admin/items", label: "Блюда", icon: UtensilsCrossed },
   { to: "/admin/categories", label: "Категории", icon: Tags },
@@ -17,7 +22,7 @@ export function AdminLayout() {
       <div className="mx-auto flex max-w-7xl flex-col md:flex-row">
         {/* Sidebar */}
         <aside className="border-b border-border bg-background md:sticky md:top-0 md:h-screen md:w-64 md:border-b-0 md:border-r">
-          <div className="flex items-center justify-between px-5 py-5 md:flex-col md:items-start md:gap-4">
+          <div className="flex items-center justify-between px-4 py-4 md:flex-col md:items-start md:gap-4 md:px-5 md:py-5">
             <Link to="/admin" className="block">
               <GruzinLogo small />
             </Link>

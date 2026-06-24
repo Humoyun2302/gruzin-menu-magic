@@ -9,8 +9,8 @@ import {
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
 
+import { Toaster } from "@/components/ui/sonner";
 import appCss from "../styles.css?url";
-import { reportLovableError } from "../lib/lovable-error-reporting";
 
 function NotFoundComponent() {
   return (
@@ -38,7 +38,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   console.error(error);
   const router = useRouter();
   useEffect(() => {
-    reportLovableError(error, { boundary: "tanstack_root_error_component" });
+    console.error("Root route error", error);
   }, [error]);
 
   return (
@@ -77,20 +77,23 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "GRUZIN — Georgian Restaurant" },
-      { name: "description", content: "Меню грузинского ресторана GRUZIN" },
+      { title: "GRUZIN — Georgian Restaurant Menu" },
+      { name: "description", content: "Digital menu for GRUZIN Georgian Restaurant." },
       { name: "theme-color", content: "#f6f1e3" },
-      { property: "og:title", content: "GRUZIN — Georgian Restaurant" },
-      { property: "og:description", content: "Меню грузинского ресторана GRUZIN" },
+      { property: "og:title", content: "GRUZIN — Georgian Restaurant Menu" },
+      { property: "og:description", content: "Digital menu for GRUZIN Georgian Restaurant." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
-      { name: "twitter:title", content: "GRUZIN — Georgian Restaurant" },
-      { name: "twitter:description", content: "Меню грузинского ресторана GRUZIN" },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/4060bf0d-a756-4258-98d6-dd9024985e52/id-preview-ff2b2dd3--9ef2f0e2-8031-497b-9479-1b82301452cd.lovable.app-1782324868320.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/4060bf0d-a756-4258-98d6-dd9024985e52/id-preview-ff2b2dd3--9ef2f0e2-8031-497b-9479-1b82301452cd.lovable.app-1782324868320.png" },
+      { name: "twitter:title", content: "GRUZIN — Georgian Restaurant Menu" },
+      { name: "twitter:description", content: "Digital menu for GRUZIN Georgian Restaurant." },
+      { property: "og:image", content: "/brand/gruzin-logo.png" },
+      { name: "twitter:image", content: "/brand/gruzin-logo.png" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
+      { rel: "icon", type: "image/svg+xml", href: "/brand/favicon.svg" },
+      { rel: "icon", type: "image/png", href: "/brand/favicon.png" },
+      { rel: "apple-touch-icon", href: "/brand/apple-touch-icon.png" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
@@ -124,8 +127,8 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
+      <Toaster position="top-center" richColors closeButton />
     </QueryClientProvider>
   );
 }

@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMenuStore, getCategories } from "@/lib/menuStore";
-import { UtensilsCrossed, Tags, Eye, EyeOff, Star } from "lucide-react";
+import { UtensilsCrossed, Tags, Eye, EyeOff, Star, Database } from "lucide-react";
 
 export const Route = createFileRoute("/admin/")({
   component: Dashboard,
@@ -17,9 +17,21 @@ function Dashboard() {
   return (
     <div className="space-y-8">
       <header>
-        <p className="text-xs font-semibold uppercase tracking-[0.25em] text-muted-foreground">Админ-панель</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.25em] text-muted-foreground">
+          Админ-панель
+        </p>
         <h1 className="mt-2 font-display text-4xl font-bold">Дашборд</h1>
         <p className="mt-2 text-muted-foreground">Управление меню ресторана GRUZIN.</p>
+        <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium text-muted-foreground">
+          <Database className="h-3.5 w-3.5" />
+          {state.syncStatus === "ready" && "Supabase подключен"}
+          {state.syncStatus === "syncing" && "Синхронизация с Supabase..."}
+          {state.syncStatus === "local" && "Локальный режим"}
+          {state.syncStatus === "error" && "Ошибка Supabase, используется локальная копия"}
+        </div>
+        {state.syncError && (
+          <p className="mt-2 max-w-2xl text-xs text-destructive">{state.syncError}</p>
+        )}
       </header>
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
@@ -42,12 +54,15 @@ function Dashboard() {
           <h2 className="font-display text-xl font-semibold">Популярные блюда</h2>
           <p className="mt-1 text-sm text-muted-foreground">{popular} отмечено как популярное</p>
           <ul className="mt-4 space-y-2 text-sm">
-            {state.items.filter((i) => i.is_popular).slice(0, 6).map((i) => (
-              <li key={i.id} className="flex items-center gap-2">
-                <Star className="h-3.5 w-3.5 text-[color:var(--gold)]" />
-                {i.name_ru}
-              </li>
-            ))}
+            {state.items
+              .filter((i) => i.is_popular)
+              .slice(0, 6)
+              .map((i) => (
+                <li key={i.id} className="flex items-center gap-2">
+                  <Star className="h-3.5 w-3.5 text-[color:var(--gold)]" />
+                  {i.name_ru}
+                </li>
+              ))}
           </ul>
         </Card>
       </div>
@@ -67,11 +82,19 @@ function Stat({ icon: Icon, label, value }: { icon: typeof Star; label: string; 
 
 function Card({ children }: { children: React.ReactNode }) {
   return (
-    <div className="rounded-2xl border border-border bg-card p-6 shadow-[var(--shadow-soft)]">{children}</div>
+    <div className="rounded-2xl border border-border bg-card p-6 shadow-[var(--shadow-soft)]">
+      {children}
+    </div>
   );
 }
 
-function ActionLink({ to, label }: { to: "/admin/items" | "/admin/categories" | "/"; label: string }) {
+function ActionLink({
+  to,
+  label,
+}: {
+  to: "/admin/items" | "/admin/categories" | "/";
+  label: string;
+}) {
   return (
     <Link
       to={to}
