@@ -85,6 +85,7 @@ async function runSupabaseWrite(task: () => Promise<void>) {
   } catch (error) {
     markSyncError(error);
     console.error("[GRUZIN] Supabase sync failed:", error);
+    throw error;
   }
 }
 
@@ -137,7 +138,8 @@ export const menuStore = {
   },
 
   // categories
-  addCategory(c: Omit<Category, "id" | "sort_order"> & { sort_order?: number }) {
+  async addCategory(c: Omit<Category, "id" | "sort_order"> & { sort_order?: number }) {
+    const previousState = state;
     const id =
       c.name_ru
         .toLowerCase()
@@ -149,10 +151,16 @@ export const menuStore = {
       c.sort_order ?? Math.max(0, ...state.categories.map((x) => x.sort_order)) + 10;
     const category = { ...c, id, sort_order };
     setState({ ...state, categories: [...state.categories, category] });
-    void runSupabaseWrite(() => saveCategoryToSupabase(category));
+    try {
+      await runSupabaseWrite(() => saveCategoryToSupabase(category));
+    } catch (error) {
+      setState(previousState);
+      throw error;
+    }
     return category;
   },
-  updateCategory(id: string, patch: Partial<Category>) {
+  async updateCategory(id: string, patch: Partial<Category>) {
+    const previousState = state;
     let nextCategory: Category | undefined;
     const categories = state.categories.map((c) => {
       if (c.id !== id) return c;
@@ -163,17 +171,29 @@ export const menuStore = {
       ...state,
       categories,
     });
-    if (nextCategory) void runSupabaseWrite(() => saveCategoryToSupabase(nextCategory));
+    try {
+      if (nextCategory) await runSupabaseWrite(() => saveCategoryToSupabase(nextCategory));
+    } catch (error) {
+      setState(previousState);
+      throw error;
+    }
   },
-  deleteCategory(id: string) {
+  async deleteCategory(id: string) {
+    const previousState = state;
     setState({
       ...state,
       categories: state.categories.filter((c) => c.id !== id),
       items: state.items.filter((i) => i.categoryId !== id),
     });
-    void runSupabaseWrite(() => deleteCategoryFromSupabase(id));
+    try {
+      await runSupabaseWrite(() => deleteCategoryFromSupabase(id));
+    } catch (error) {
+      setState(previousState);
+      throw error;
+    }
   },
-  reorderCategory(id: string, dir: -1 | 1) {
+  async reorderCategory(id: string, dir: -1 | 1) {
+    const previousState = state;
     const sorted = [...state.categories].sort((a, b) => a.sort_order - b.sort_order);
     const idx = sorted.findIndex((c) => c.id === id);
     const swap = idx + dir;
@@ -189,11 +209,17 @@ export const menuStore = {
       return category;
     });
     setState({ ...state, categories });
-    void runSupabaseWrite(() => saveCategoriesToSupabase([a, b]));
+    try {
+      await runSupabaseWrite(() => saveCategoriesToSupabase([a, b]));
+    } catch (error) {
+      setState(previousState);
+      throw error;
+    }
   },
 
   // items
-  addItem(item: Omit<MenuItem, "id" | "sort_order">) {
+  async addItem(item: Omit<MenuItem, "id" | "sort_order">) {
+    const previousState = state;
     const id = item.categoryId + "-" + Date.now();
     const sort_order =
       Math.max(
@@ -202,9 +228,16 @@ export const menuStore = {
       ) + 1;
     const nextItem = { ...item, id, sort_order };
     setState({ ...state, items: [...state.items, nextItem] });
-    void runSupabaseWrite(() => saveItemToSupabase(nextItem));
+    try {
+      await runSupabaseWrite(() => saveItemToSupabase(nextItem));
+    } catch (error) {
+      setState(previousState);
+      throw error;
+    }
+    return nextItem;
   },
-  updateItem(id: string, patch: Partial<MenuItem>) {
+  async updateItem(id: string, patch: Partial<MenuItem>) {
+    const previousState = state;
     let nextItem: MenuItem | undefined;
     const items = state.items.map((i) => {
       if (i.id !== id) return i;
@@ -212,21 +245,39 @@ export const menuStore = {
       return nextItem;
     });
     setState({ ...state, items });
-    if (nextItem) void runSupabaseWrite(() => saveItemToSupabase(nextItem));
+    try {
+      if (nextItem) await runSupabaseWrite(() => saveItemToSupabase(nextItem));
+    } catch (error) {
+      setState(previousState);
+      throw error;
+    }
+    return nextItem;
   },
-  deleteItem(id: string) {
+  async deleteItem(id: string) {
+    const previousState = state;
     setState({ ...state, items: state.items.filter((i) => i.id !== id) });
-    void runSupabaseWrite(() => deleteItemFromSupabase(id));
+    try {
+      await runSupabaseWrite(() => deleteItemFromSupabase(id));
+    } catch (error) {
+      setState(previousState);
+      throw error;
+    }
   },
 
-  reset() {
+  async reset() {
+    const previousState = state;
     setState({
       categories: SEED_CATEGORIES,
       items: SEED_ITEMS,
       syncStatus: isSupabaseConfigured ? "syncing" : "local",
       syncError: undefined,
     });
-    void runSupabaseWrite(() => seedMenuInSupabase(SEED_CATEGORIES, SEED_ITEMS));
+    try {
+      await runSupabaseWrite(() => seedMenuInSupabase(SEED_CATEGORIES, SEED_ITEMS));
+    } catch (error) {
+      setState(previousState);
+      throw error;
+    }
   },
 };
 

@@ -142,9 +142,14 @@ function ItemsAdmin() {
               <DeleteConfirm
                 title="Удалить блюдо?"
                 description={`Удалить «${i.name_ru}»? Это действие необратимо.`}
-                onConfirm={() => {
-                  menuStore.deleteItem(i.id);
-                  toast.success("Блюдо удалено");
+                onConfirm={async () => {
+                  try {
+                    await menuStore.deleteItem(i.id);
+                    toast.success("Блюдо удалено");
+                  } catch {
+                    toast.error("Не удалось удалить блюдо");
+                    throw new Error("Delete failed");
+                  }
                 }}
                 trigger={
                   <Button size="icon" variant="ghost" aria-label="Delete">
@@ -162,9 +167,9 @@ function ItemsAdmin() {
         onOpenChange={setOpen}
         initial={editing}
         categories={cats}
-        onSave={(draft, id) => {
-          if (id) menuStore.updateItem(id, draft);
-          else menuStore.addItem(draft);
+        onSave={async (draft, id) => {
+          if (id) await menuStore.updateItem(id, draft);
+          else await menuStore.addItem(draft);
         }}
       />
     </div>

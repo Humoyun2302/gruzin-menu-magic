@@ -17,10 +17,22 @@ export function DeleteConfirm({
 }: {
   title: string;
   description: string;
-  onConfirm: () => void;
+  onConfirm: () => Promise<void> | void;
   trigger: React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const confirm = async () => {
+    setLoading(true);
+    try {
+      await onConfirm();
+      setOpen(false);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <>
       <span onClick={() => setOpen(true)}>{trigger}</span>
@@ -34,14 +46,8 @@ export function DeleteConfirm({
             <Button variant="outline" onClick={() => setOpen(false)}>
               Отмена
             </Button>
-            <Button
-              variant="destructive"
-              onClick={() => {
-                onConfirm();
-                setOpen(false);
-              }}
-            >
-              Удалить
+            <Button variant="destructive" disabled={loading} onClick={confirm}>
+              {loading ? "Удаляем..." : "Удалить"}
             </Button>
           </DialogFooter>
         </DialogContent>

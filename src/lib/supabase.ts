@@ -49,6 +49,7 @@ type Database = {
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string | undefined;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
+const FOOD_IMAGES_BUCKET = "food-images";
 
 export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey);
 
@@ -123,6 +124,24 @@ export async function deleteItemFromSupabase(id: string) {
   if (error) throw error;
 }
 
+export async function uploadFoodImage(file: File) {
+  if (!supabase) throw new Error("Supabase is not configured.");
+
+  const extension = extensionForFile(file);
+  const path = `${new Date().toISOString().slice(0, 10)}/${crypto.randomUUID()}.${extension}`;
+  const { error } = await supabase.storage.from(FOOD_IMAGES_BUCKET).upload(path, file, {
+    cacheControl: "31536000",
+    contentType: file.type,
+    upsert: false,
+  });
+
+  if (error) throw error;
+
+  const { data } = supabase.storage.from(FOOD_IMAGES_BUCKET).getPublicUrl(path);
+  if (!data.publicUrl) throw new Error("Could not create a public image URL.");
+  return data.publicUrl;
+}
+
 function categoryFromRow(row: CategoryRow): Category {
   return {
     id: row.id,
@@ -187,4 +206,10 @@ function itemToRow(item: MenuItem): MenuItemRow {
     sort_order: item.sort_order,
     needs_verification: item.needs_verification ?? false,
   };
+}
+
+function extensionForFile(file: File) {
+  if (file.type === "image/png") return "png";
+  if (file.type === "image/webp") return "webp";
+  return "jpg";
 }

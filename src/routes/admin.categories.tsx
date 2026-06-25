@@ -35,6 +35,7 @@ function CategoriesAdmin() {
     is_active: true,
   });
   const [initialDraft, setInitialDraft] = useState<Draft>(draft);
+  const [saving, setSaving] = useState(false);
 
   const startNew = () => {
     const next = { name_ru: "", name_uz: "", name_en: "", is_active: true };
@@ -63,16 +64,31 @@ function CategoriesAdmin() {
     }
     setOpen(nextOpen);
   };
-  const save = () => {
+  const save = async () => {
     if (!draft.name_ru.trim()) return;
-    if (editing) {
-      menuStore.updateCategory(editing.id, draft);
-      toast.success("Категория обновлена");
-    } else {
-      menuStore.addCategory(draft);
-      toast.success("Категория добавлена");
+    setSaving(true);
+    try {
+      if (editing) {
+        await menuStore.updateCategory(editing.id, draft);
+        toast.success("Категория обновлена");
+      } else {
+        await menuStore.addCategory(draft);
+        toast.success("Категория добавлена");
+      }
+      setOpen(false);
+    } catch {
+      toast.error("Не удалось сохранить категорию");
+    } finally {
+      setSaving(false);
     }
-    setOpen(false);
+  };
+
+  const reorder = async (id: string, dir: -1 | 1) => {
+    try {
+      await menuStore.reorderCategory(id, dir);
+    } catch {
+      toast.error("Не удалось изменить порядок категорий");
+    }
   };
 
   const countFor = (id: string) => state.items.filter((i) => i.categoryId === id).length;
@@ -111,7 +127,7 @@ function CategoriesAdmin() {
                   variant="ghost"
                   className="h-6 w-6"
                   disabled={idx === 0}
-                  onClick={() => menuStore.reorderCategory(c.id, -1)}
+                  onClick={() => void reorder(c.id, -1)}
                   aria-label="Поднять категорию"
                 >
                   <ArrowUp className="h-3.5 w-3.5" />
@@ -121,7 +137,7 @@ function CategoriesAdmin() {
                   variant="ghost"
                   className="h-6 w-6"
                   disabled={idx === cats.length - 1}
-                  onClick={() => menuStore.reorderCategory(c.id, 1)}
+                  onClick={() => void reorder(c.id, 1)}
                   aria-label="Опустить категорию"
                 >
                   <ArrowDown className="h-3.5 w-3.5" />
@@ -150,9 +166,14 @@ function CategoriesAdmin() {
                 <DeleteConfirm
                   title="Удалить категорию?"
                   description={`Удалить пустую категорию «${c.name_ru}»?`}
-                  onConfirm={() => {
-                    menuStore.deleteCategory(c.id);
-                    toast.success("Категория удалена");
+                  onConfirm={async () => {
+                    try {
+                      await menuStore.deleteCategory(c.id);
+                      toast.success("Категория удалена");
+                    } catch {
+                      toast.error("Не удалось удалить категорию");
+                      throw new Error("Delete failed");
+                    }
                   }}
                   trigger={
                     <Button size="icon" variant="ghost" aria-label="Удалить категорию">
@@ -212,8 +233,8 @@ function CategoriesAdmin() {
             <Button variant="outline" onClick={() => requestOpenChange(false)}>
               Отмена
             </Button>
-            <Button disabled={!draft.name_ru.trim()} onClick={save}>
-              Сохранить
+            <Button disabled={saving || !draft.name_ru.trim()} onClick={save}>
+              {saving ? "Сохраняем..." : "Сохранить"}
             </Button>
           </DialogFooter>
         </DialogContent>

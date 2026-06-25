@@ -56,7 +56,7 @@ export function ItemFormDialog({
   onOpenChange: (v: boolean) => void;
   initial?: MenuItem | null;
   categories: Category[];
-  onSave: (draft: SaveDraft, id?: string) => void;
+  onSave: (draft: SaveDraft, id?: string) => Promise<void> | void;
 }) {
   const defaultCategoryId = categories[0]?.id ?? "";
   const [draft, setDraft] = useState<Draft>(empty(defaultCategoryId));
@@ -64,6 +64,9 @@ export function ItemFormDialog({
   const [newCategoryName, setNewCategoryName] = useState("");
   const [showNewCategory, setShowNewCategory] = useState(false);
   const [attemptedSave, setAttemptedSave] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [imageBusy, setImageBusy] = useState(false);
+  const [categoryBusy, setCategoryBusy] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -75,6 +78,9 @@ export function ItemFormDialog({
     setNewCategoryName("");
     setShowNewCategory(false);
     setAttemptedSave(false);
+    setSaving(false);
+    setImageBusy(false);
+    setCategoryBusy(false);
   }, [open, initial, defaultCategoryId]);
 
   const set = <K extends keyof Draft>(k: K, v: Draft[K]) => setDraft((d) => ({ ...d, [k]: v }));
@@ -97,21 +103,43 @@ export function ItemFormDialog({
     onOpenChange(nextOpen);
   };
 
-  const addCategoryInline = () => {
+  const addCategoryInline = async () => {
     const name = newCategoryName.trim();
     if (!name) return;
-    const category = menuStore.addCategory({
-      name_ru: name,
-      name_uz: "",
-      name_en: "",
-      is_active: true,
-    });
-    set("categoryId", category.id);
-    setNewCategoryName("");
-    setShowNewCategory(false);
-    toast.success("Категория добавлена", {
-      description: `«${category.name_ru}» выбрана для блюда.`,
-    });
+    setCategoryBusy(true);
+    try {
+      const category = await menuStore.addCategory({
+        name_ru: name,
+        name_uz: "",
+        name_en: "",
+        is_active: true,
+      });
+      set("categoryId", category.id);
+      setNewCategoryName("");
+      setShowNewCategory(false);
+      toast.success("Категория добавлена", {
+        description: `«${category.name_ru}» выбрана для блюда.`,
+      });
+    } catch {
+      toast.error("Не удалось сохранить категорию");
+    } finally {
+      setCategoryBusy(false);
+    }
+  };
+
+  const save = async () => {
+    setAttemptedSave(true);
+    if (!isValid || imageBusy || saving) return;
+    setSaving(true);
+    try {
+      await onSave({ ...draft, price: priceNumber }, initial?.id);
+      toast.success(initial ? "Блюдо обновлено" : "Блюдо добавлено");
+      onOpenChange(false);
+    } catch {
+      toast.error("Не удалось сохранить блюдо");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -127,6 +155,7 @@ export function ItemFormDialog({
             value={draft.image_url}
             onChange={(value) => set("image_url", value)}
             onRemove={() => set("image_url", "")}
+            onBusyChange={setImageBusy}
           />
 
           <div className="grid gap-3 sm:grid-cols-2">
@@ -196,10 +225,10 @@ export function ItemFormDialog({
                     </Button>
                     <Button
                       type="button"
-                      disabled={!newCategoryName.trim()}
+                      disabled={categoryBusy || !newCategoryName.trim()}
                       onClick={addCategoryInline}
                     >
-                      Добавить категорию
+                      {categoryBusy ? "Сохраняем..." : "Добавить категорию"}
                     </Button>
                   </div>
                 </div>
@@ -274,17 +303,8 @@ export function ItemFormDialog({
           <Button variant="outline" onClick={() => requestOpenChange(false)}>
             Отмена
           </Button>
-          <Button
-            disabled={!isValid}
-            onClick={() => {
-              setAttemptedSave(true);
-              if (!isValid) return;
-              onSave({ ...draft, price: priceNumber }, initial?.id);
-              toast.success(initial ? "Блюдо обновлено" : "Блюдо добавлено");
-              onOpenChange(false);
-            }}
-          >
-            Сохранить
+          <Button disabled={!isValid || imageBusy || saving} onClick={save}>
+            {imageBusy ? "Загрузка фото..." : saving ? "Сохраняем..." : "Сохранить"}
           </Button>
         </DialogFooter>
       </DialogContent>
