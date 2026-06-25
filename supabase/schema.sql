@@ -1,11 +1,8 @@
 -- GRUZIN NFC menu Supabase schema
 -- Run this in Supabase SQL Editor before adding VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.
 --
--- Important security note:
--- This project currently has no admin authentication, so the write policies below allow the
--- anonymous frontend key to manage menu data. That matches the current app behavior and lets the
--- admin panel work immediately, but before production you should add admin auth and replace the
--- write policies with authenticated/admin-only policies.
+-- Admin writes require a Supabase Auth user. Create the admin user in:
+-- Supabase Dashboard -> Authentication -> Users -> Add user.
 
 create table if not exists public.categories (
   id text primary key,
@@ -70,25 +67,27 @@ alter table public.menu_items enable row level security;
 drop policy if exists "Public can read categories" on public.categories;
 create policy "Public can read categories"
 on public.categories for select
-to anon
+to anon, authenticated
 using (true);
 
 drop policy if exists "Public can read menu items" on public.menu_items;
 create policy "Public can read menu items"
 on public.menu_items for select
-to anon
+to anon, authenticated
 using (true);
 
 drop policy if exists "Anon can manage categories temporarily" on public.categories;
-create policy "Anon can manage categories temporarily"
+drop policy if exists "Authenticated admins can manage categories" on public.categories;
+create policy "Authenticated admins can manage categories"
 on public.categories for all
-to anon
+to authenticated
 using (true)
 with check (true);
 
 drop policy if exists "Anon can manage menu items temporarily" on public.menu_items;
-create policy "Anon can manage menu items temporarily"
+drop policy if exists "Authenticated admins can manage menu items" on public.menu_items;
+create policy "Authenticated admins can manage menu items"
 on public.menu_items for all
-to anon
+to authenticated
 using (true)
 with check (true);

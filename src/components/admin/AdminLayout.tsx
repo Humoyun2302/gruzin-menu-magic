@@ -1,6 +1,16 @@
-import { Link, Outlet, useRouterState } from "@tanstack/react-router";
-import { LayoutDashboard, UtensilsCrossed, Tags, ExternalLink } from "lucide-react";
+import { Link, Outlet, useNavigate, useRouterState } from "@tanstack/react-router";
+import {
+  LayoutDashboard,
+  UtensilsCrossed,
+  Tags,
+  ExternalLink,
+  LogOut,
+  ShieldCheck,
+} from "lucide-react";
+import { useEffect } from "react";
+import { Button } from "@/components/ui/button";
 import { GruzinLogo } from "@/components/menu/GruzinLogo";
+import { useAdminAuth, signOutAdmin } from "@/lib/adminAuth";
 import { cn } from "@/lib/utils";
 
 const NAV: ReadonlyArray<{
@@ -16,6 +26,37 @@ const NAV: ReadonlyArray<{
 
 export function AdminLayout() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const navigate = useNavigate();
+  const { session, loading } = useAdminAuth();
+  const isLoginPage = pathname === "/admin/login";
+
+  useEffect(() => {
+    if (loading) return;
+    if (!session && !isLoginPage) {
+      void navigate({ to: "/admin/login", replace: true });
+    }
+    if (session && isLoginPage) {
+      void navigate({ to: "/admin", replace: true });
+    }
+  }, [isLoginPage, loading, navigate, session]);
+
+  if (isLoginPage) return <Outlet />;
+
+  if (loading || !session) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[color:var(--cream-deep)]/30 px-4">
+        <div className="flex items-center gap-3 rounded-2xl border border-border bg-background px-5 py-4 text-sm text-muted-foreground shadow-[var(--shadow-soft)]">
+          <ShieldCheck className="h-4 w-4" />
+          Проверяем доступ...
+        </div>
+      </div>
+    );
+  }
+
+  const handleSignOut = async () => {
+    await signOutAdmin();
+    void navigate({ to: "/admin/login", replace: true });
+  };
 
   return (
     <div className="min-h-screen bg-[color:var(--cream-deep)]/30">
@@ -56,6 +97,15 @@ export function AdminLayout() {
               <ExternalLink className="h-4 w-4" />
               Открыть меню
             </Link>
+            <Button
+              type="button"
+              variant="ghost"
+              className="justify-start gap-2.5 whitespace-nowrap px-3 text-sm font-medium text-muted-foreground hover:bg-secondary hover:text-foreground"
+              onClick={handleSignOut}
+            >
+              <LogOut className="h-4 w-4" />
+              Выйти
+            </Button>
           </nav>
         </aside>
 
