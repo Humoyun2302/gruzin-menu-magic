@@ -4,9 +4,10 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { GruzinLogo } from "@/components/menu/GruzinLogo";
 import { MenuItemCard } from "@/components/menu/MenuItemCard";
+import { DishDetailModal } from "@/components/menu/DishDetailModal";
 import { useMenuStore, getCategories, getItemsByCategory, searchMenuItems } from "@/lib/menuStore";
 import { categoryName, t, LANG_LABELS } from "@/lib/translations";
-import type { Lang } from "@/types/menu";
+import type { Lang, MenuItem } from "@/types/menu";
 import { cn } from "@/lib/utils";
 
 export function CustomerMenu() {
@@ -15,6 +16,7 @@ export function CustomerMenu() {
   const [query, setQuery] = useState("");
   const [activeCat, setActiveCat] = useState<string | null>(null);
   const [showTop, setShowTop] = useState(false);
+  const [selectedDish, setSelectedDish] = useState<MenuItem | null>(null);
   const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
   const categoryButtonRefs = useRef<Record<string, HTMLButtonElement | null>>({});
 
@@ -24,6 +26,9 @@ export function CustomerMenu() {
     () => (isSearching ? searchMenuItems(state, query).filter((i) => i.is_available) : []),
     [state, query, isSearching],
   );
+  const selectedCategory = selectedDish
+    ? categories.find((category) => category.id === selectedDish.categoryId)
+    : undefined;
 
   useEffect(() => {
     if (!isSearching && !activeCat && categories[0]) {
@@ -143,7 +148,7 @@ export function CustomerMenu() {
             ) : (
               <Grid>
                 {searchResults.map((i) => (
-                  <MenuItemCard key={i.id} item={i} lang={lang} />
+                  <MenuItemCard key={i.id} item={i} lang={lang} onSelect={setSelectedDish} />
                 ))}
               </Grid>
             )}
@@ -169,7 +174,7 @@ export function CustomerMenu() {
                 </div>
                 <Grid>
                   {items.map((i) => (
-                    <MenuItemCard key={i.id} item={i} lang={lang} />
+                    <MenuItemCard key={i.id} item={i} lang={lang} onSelect={setSelectedDish} />
                   ))}
                 </Grid>
               </section>
@@ -187,6 +192,16 @@ export function CustomerMenu() {
           <ArrowUp className="h-5 w-5" />
         </Button>
       )}
+
+      <DishDetailModal
+        item={selectedDish}
+        category={selectedCategory}
+        lang={lang}
+        open={Boolean(selectedDish)}
+        onOpenChange={(open) => {
+          if (!open) setSelectedDish(null);
+        }}
+      />
     </div>
   );
 }

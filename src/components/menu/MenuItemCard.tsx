@@ -1,12 +1,36 @@
 import { Badge } from "@/components/ui/menu-badge";
 import { formatPrice, itemName, itemDesc, t } from "@/lib/translations";
+import { cn } from "@/lib/utils";
 import type { Lang, MenuItem } from "@/types/menu";
 import { UtensilsCrossed } from "lucide-react";
 
-export function MenuItemCard({ item, lang }: { item: MenuItem; lang: Lang }) {
+export function MenuItemCard({
+  item,
+  lang,
+  onSelect,
+}: {
+  item: MenuItem;
+  lang: Lang;
+  onSelect: (item: MenuItem) => void;
+}) {
+  const name = itemName(item, lang);
+  const description = itemDesc(item, lang);
+
   return (
-    <article className="group flex min-h-full flex-col overflow-hidden rounded-[1.05rem] border border-border bg-card shadow-[var(--shadow-card)] transition hover:-translate-y-0.5 hover:shadow-[0_20px_50px_-22px_rgba(20,15,10,0.25)] md:rounded-xl">
-      <FoodImage src={item.image_url} alt={itemName(item, lang)} />
+    <article
+      role="button"
+      tabIndex={0}
+      onClick={() => onSelect(item)}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          onSelect(item);
+        }
+      }}
+      className="group flex min-h-full w-full cursor-pointer flex-col overflow-hidden rounded-[1.05rem] border border-border bg-card text-left shadow-[var(--shadow-card)] transition hover:-translate-y-0.5 hover:shadow-[0_20px_50px_-22px_rgba(20,15,10,0.25)] focus:outline-none focus:ring-2 focus:ring-foreground/25 focus:ring-offset-2 focus:ring-offset-background active:scale-[0.99] md:rounded-xl"
+      aria-label={`${t(lang, "dishDetails")}: ${name}`}
+    >
+      <FoodImage src={item.image_url} alt={name} />
       <div className="flex flex-1 flex-col gap-1.5 p-2.5 md:gap-2.5 md:p-4">
         <div className="flex min-h-4 flex-wrap items-start gap-1 md:min-h-0 md:gap-1.5">
           {item.is_popular && (
@@ -26,43 +50,66 @@ export function MenuItemCard({ item, lang }: { item: MenuItem; lang: Lang }) {
           )}
         </div>
         <h3 className="line-clamp-2 text-[15px] font-semibold leading-[1.15] text-foreground md:font-display md:text-lg md:leading-tight">
-          {itemName(item, lang)}
+          {name}
         </h3>
-        {itemDesc(item, lang) && (
-          <p className="line-clamp-2 text-[12px] leading-[1.35] text-muted-foreground md:text-sm md:leading-5">
-            {itemDesc(item, lang)}
+        {description && (
+          <p className="line-clamp-2 min-h-[2.7em] text-[12px] leading-[1.35] text-muted-foreground md:line-clamp-3 md:min-h-[3.75rem] md:text-sm md:leading-5">
+            {description}
           </p>
         )}
-        <div className="mt-auto flex items-end justify-between gap-2 border-t border-border/70 pt-2 md:gap-3 md:pt-3">
-          <span className="text-[16px] font-bold leading-none tracking-tight text-foreground md:text-base">
-            {formatPrice(item.price)}
-          </span>
-          {item.weight && (
-            <span className="text-[11px] font-medium uppercase leading-none tracking-wide text-muted-foreground md:text-xs">
-              {item.weight}
+        <div className="mt-auto grid gap-2 border-t border-border/70 pt-2 md:gap-3 md:pt-3">
+          <div className="flex items-end justify-between gap-2 md:gap-3">
+            <span className="text-[16px] font-bold leading-none tracking-tight text-foreground md:text-base">
+              {formatPrice(item.price)}
             </span>
-          )}
+            {item.weight && (
+              <span className="text-[11px] font-medium uppercase leading-none tracking-wide text-muted-foreground md:text-xs">
+                {item.weight}
+              </span>
+            )}
+          </div>
+          <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-foreground/65 transition group-hover:text-foreground md:text-xs">
+            {t(lang, "more")}
+          </span>
         </div>
       </div>
     </article>
   );
 }
 
-export function FoodImage({ src, alt }: { src?: string; alt: string }) {
+export function FoodImage({
+  src,
+  alt,
+  className,
+  imageClassName,
+}: {
+  src?: string;
+  alt: string;
+  className?: string;
+  imageClassName?: string;
+}) {
   if (src) {
     return (
-      <div className="aspect-[4/3] w-full overflow-hidden bg-muted">
+      <div className={cn("aspect-[4/3] w-full overflow-hidden bg-muted", className)}>
         <img
           src={src}
           alt={alt}
           loading="lazy"
-          className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+          className={cn(
+            "h-full w-full object-cover transition duration-500 group-hover:scale-105",
+            imageClassName,
+          )}
         />
       </div>
     );
   }
   return (
-    <div className="relative flex aspect-[4/3] w-full items-center justify-center overflow-hidden bg-[color:var(--cream-deep)]">
+    <div
+      className={cn(
+        "relative flex aspect-[4/3] w-full items-center justify-center overflow-hidden bg-[color:var(--cream-deep)]",
+        className,
+      )}
+    >
       <div
         aria-hidden
         className="absolute inset-0 opacity-30"
