@@ -8,6 +8,7 @@ import {
   isSupabaseConfigured,
   saveCategoriesToSupabase,
   saveCategoryToSupabase,
+  saveItemsToSupabase,
   saveItemToSupabase,
   seedMenuInSupabase,
 } from "@/lib/supabase";
@@ -252,6 +253,38 @@ export const menuStore = {
       throw error;
     }
     return nextItem;
+  },
+  async reorderItem(id: string, dir: -1 | 1) {
+    const previousState = state;
+    const item = state.items.find((candidate) => candidate.id === id);
+    if (!item) return;
+
+    const sorted = state.items
+      .filter((candidate) => candidate.categoryId === item.categoryId)
+      .sort((a, b) => a.sort_order - b.sort_order);
+    const idx = sorted.findIndex((candidate) => candidate.id === id);
+    const swap = idx + dir;
+    if (idx < 0 || swap < 0 || swap >= sorted.length) return;
+
+    const a = { ...sorted[idx] };
+    const b = { ...sorted[swap] };
+    const tmp = a.sort_order;
+    a.sort_order = b.sort_order;
+    b.sort_order = tmp;
+
+    const items = state.items.map((candidate) => {
+      if (candidate.id === a.id) return a;
+      if (candidate.id === b.id) return b;
+      return candidate;
+    });
+    setState({ ...state, items });
+
+    try {
+      await runSupabaseWrite(() => saveItemsToSupabase([a, b]));
+    } catch (error) {
+      setState(previousState);
+      throw error;
+    }
   },
   async deleteItem(id: string) {
     const previousState = state;

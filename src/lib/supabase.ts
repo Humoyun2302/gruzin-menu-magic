@@ -118,6 +118,12 @@ export async function saveItemToSupabase(item: MenuItem) {
   if (error) throw error;
 }
 
+export async function saveItemsToSupabase(items: MenuItem[]) {
+  if (!supabase) return;
+  const { error } = await supabase.from("menu_items").upsert(items.map(itemToRow));
+  if (error) throw error;
+}
+
 export async function deleteItemFromSupabase(id: string) {
   if (!supabase) return;
   const { error } = await supabase.from("menu_items").delete().eq("id", id);
