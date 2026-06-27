@@ -1,14 +1,19 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Search, ArrowUp } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { GruzinLogo } from "@/components/menu/GruzinLogo";
 import { MenuItemCard } from "@/components/menu/MenuItemCard";
-import { DishDetailModal } from "@/components/menu/DishDetailModal";
 import { useMenuStore, getCategories, getItemsByCategory, searchMenuItems } from "@/lib/menuStore";
 import { categoryName, t, LANG_LABELS } from "@/lib/translations";
 import type { Lang, MenuItem } from "@/types/menu";
 import { cn } from "@/lib/utils";
+
+const DishDetailModal = lazy(() =>
+  import("@/components/menu/DishDetailModal").then((module) => ({
+    default: module.DishDetailModal,
+  })),
+);
 
 export function CustomerMenu() {
   const state = useMenuStore();
@@ -147,8 +152,14 @@ export function CustomerMenu() {
               </p>
             ) : (
               <Grid>
-                {searchResults.map((i) => (
-                  <MenuItemCard key={i.id} item={i} lang={lang} onSelect={setSelectedDish} />
+                {searchResults.map((i, index) => (
+                  <MenuItemCard
+                    key={i.id}
+                    item={i}
+                    lang={lang}
+                    onSelect={setSelectedDish}
+                    priority={index < 4}
+                  />
                 ))}
               </Grid>
             )}
@@ -173,8 +184,14 @@ export function CustomerMenu() {
                   </h2>
                 </div>
                 <Grid>
-                  {items.map((i) => (
-                    <MenuItemCard key={i.id} item={i} lang={lang} onSelect={setSelectedDish} />
+                  {items.map((i, index) => (
+                    <MenuItemCard
+                      key={i.id}
+                      item={i}
+                      lang={lang}
+                      onSelect={setSelectedDish}
+                      priority={c.id === categories[0]?.id && index < 4}
+                    />
                   ))}
                 </Grid>
               </section>
@@ -193,15 +210,19 @@ export function CustomerMenu() {
         </Button>
       )}
 
-      <DishDetailModal
-        item={selectedDish}
-        category={selectedCategory}
-        lang={lang}
-        open={Boolean(selectedDish)}
-        onOpenChange={(open) => {
-          if (!open) setSelectedDish(null);
-        }}
-      />
+      {selectedDish && (
+        <Suspense fallback={null}>
+          <DishDetailModal
+            item={selectedDish}
+            category={selectedCategory}
+            lang={lang}
+            open={Boolean(selectedDish)}
+            onOpenChange={(open) => {
+              if (!open) setSelectedDish(null);
+            }}
+          />
+        </Suspense>
+      )}
     </div>
   );
 }

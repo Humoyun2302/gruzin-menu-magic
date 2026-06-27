@@ -1,17 +1,19 @@
+import { memo } from "react";
 import { Badge } from "@/components/ui/menu-badge";
+import { OptimizedFoodImage } from "@/components/menu/OptimizedFoodImage";
 import { formatPrice, itemName, itemDesc, t } from "@/lib/translations";
-import { cn } from "@/lib/utils";
 import type { Lang, MenuItem } from "@/types/menu";
-import { UtensilsCrossed } from "lucide-react";
 
-export function MenuItemCard({
+export const MenuItemCard = memo(function MenuItemCard({
   item,
   lang,
   onSelect,
+  priority = false,
 }: {
   item: MenuItem;
   lang: Lang;
   onSelect: (item: MenuItem) => void;
+  priority?: boolean;
 }) {
   const name = itemName(item, lang);
   const description = itemDesc(item, lang);
@@ -30,7 +32,7 @@ export function MenuItemCard({
       className="group flex min-h-full w-full cursor-pointer flex-col overflow-hidden rounded-[1.05rem] border border-border bg-card text-left shadow-[var(--shadow-card)] transition hover:-translate-y-0.5 hover:shadow-[0_20px_50px_-22px_rgba(20,15,10,0.25)] focus:outline-none focus:ring-2 focus:ring-foreground/25 focus:ring-offset-2 focus:ring-offset-background active:scale-[0.99] md:rounded-xl"
       aria-label={`${t(lang, "dishDetails")}: ${name}`}
     >
-      <FoodImage src={item.image_url} alt={name} />
+      <OptimizedFoodImage src={item.image_url} alt={name} priority={priority} />
       <div className="flex flex-1 flex-col gap-1.5 p-2.5 md:gap-2.5 md:p-4">
         <div className="flex min-h-4 flex-wrap items-start gap-1 md:min-h-0 md:gap-1.5">
           {item.is_popular && (
@@ -75,60 +77,4 @@ export function MenuItemCard({
       </div>
     </article>
   );
-}
-
-export function FoodImage({
-  src,
-  alt,
-  className,
-  imageClassName,
-}: {
-  src?: string;
-  alt: string;
-  className?: string;
-  imageClassName?: string;
-}) {
-  if (src) {
-    return (
-      <div className={cn("aspect-[4/3] w-full overflow-hidden bg-muted", className)}>
-        <img
-          src={src}
-          alt={alt}
-          loading="lazy"
-          className={cn(
-            "h-full w-full object-cover transition duration-500 group-hover:scale-105",
-            imageClassName,
-          )}
-        />
-      </div>
-    );
-  }
-  return (
-    <div
-      className={cn(
-        "relative flex aspect-[4/3] w-full items-center justify-center overflow-hidden bg-[color:var(--cream-deep)]",
-        className,
-      )}
-    >
-      <div
-        aria-hidden
-        className="absolute inset-0 opacity-30"
-        style={{
-          backgroundImage:
-            "radial-gradient(circle at 1px 1px, rgba(0,0,0,0.08) 1px, transparent 0)",
-          backgroundSize: "18px 18px",
-        }}
-      />
-      <div className="relative flex flex-col items-center gap-1.5 text-foreground/35 md:gap-2">
-        <UtensilsCrossed className="h-6 w-6 md:h-10 md:w-10" strokeWidth={1.3} />
-        <span
-          className="inline-block bg-foreground/30"
-          style={{ width: 7, height: 7, transform: "rotate(45deg)" }}
-        />
-        <span className="text-[8px] font-semibold uppercase tracking-[0.2em] md:text-[10px]">
-          GRUZIN
-        </span>
-      </div>
-    </div>
-  );
-}
+});

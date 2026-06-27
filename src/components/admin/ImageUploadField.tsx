@@ -3,11 +3,17 @@ import { ImageIcon, LinkIcon, Loader2, Upload, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  compressImage,
+  fileToDataUrl,
+  formatBytes,
+  type CompressResult,
+} from "@/lib/imageCompression";
 import { isSupabaseConfigured, uploadFoodImage } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
 
 const ACCEPTED_IMAGE_TYPES = ["image/png", "image/jpeg", "image/webp"];
-const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
+const MAX_IMAGE_SIZE = 10 * 1024 * 1024;
 const ACCEPT_ATTRIBUTE = ACCEPTED_IMAGE_TYPES.join(",");
 
 export function ImageUploadField({
@@ -31,11 +37,14 @@ export function ImageUploadField({
   const [urlValue, setUrlValue] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [statusText, setStatusText] = useState("");
+  const [lastCompression, setLastCompression] = useState<CompressResult | null>(null);
   const [dragActive, setDragActive] = useState(false);
 
   useEffect(() => {
     setError(null);
     setUrlValue("");
+    setLastCompression(null);
   }, [value]);
 
   useEffect(() => {
@@ -74,12 +83,19 @@ export function ImageUploadField({
 
     setError(null);
     setUploading(true);
+    setStatusText("Оптимизация фото...");
+    setLastCompression(null);
     setLocalPreview(URL.createObjectURL(file));
 
     try {
+      const optimized = await compressImage(file);
+      setLastCompression(optimized);
+      setStatusText("Загружаем фото...");
+      setLocalPreview(URL.createObjectURL(optimized.file));
+
       const savedValue = isSupabaseConfigured
-        ? await uploadFoodImage(file)
-        : await fileToDataUrl(file);
+        ? await uploadFoodImage(optimized.file)
+        : await fileToDataUrl(optimized.file);
       onChange(savedValue);
       setLocalPreview(null);
     } catch (cause) {
@@ -91,6 +107,7 @@ export function ImageUploadField({
       setLocalPreview(null);
     } finally {
       setUploading(false);
+      setStatusText("");
     }
   };
 
@@ -153,7 +170,7 @@ export function ImageUploadField({
           {uploading && (
             <div className="absolute inset-0 flex items-center justify-center bg-background/75 text-sm font-medium text-foreground backdrop-blur-sm">
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Загружаем...
+              {statusText || "Загружаем..."}
             </div>
           )}
         </div>
@@ -185,8 +202,15 @@ export function ImageUploadField({
           </div>
 
           <p className="text-xs leading-5 text-muted-foreground">
-            PNG, JPG или WEBP до 5 МБ. Можно перетащить файл в область фото.
+            PNG, JPG или WEBP до 10 МБ. Фото автоматически сжимается перед сохранением.
           </p>
+
+          {lastCompression && (
+            <p className="text-xs leading-5 text-muted-foreground">
+              Оптимизировано: {formatBytes(lastCompression.originalSize)} →{" "}
+              {formatBytes(lastCompression.compressedSize)}
+            </p>
+          )}
 
           <div className="grid gap-2 rounded-lg border border-border bg-secondary/35 p-2">
             <Label className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
@@ -219,37 +243,6 @@ export function ImageUploadField({
 
 function validateFile(file: File) {
   if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) return "Можно загрузить только PNG, JPG или WEBP.";
-  if (file.size > MAX_IMAGE_SIZE) return "Файл слишком большой. Максимальный размер — 5 МБ.";
+  if (file.size > MAX_IMAGE_SIZE) return "Файл слишком большой. Максимальный размер — 10 МБ.";
   return "";
-}
-
-async function fileToDataUrl(file: File): Promise<string> {
-  const image = await loadImage(file);
-  const maxSize = 1200;
-  const scale = Math.min(1, maxSize / Math.max(image.width, image.height));
-  const width = Math.max(1, Math.round(image.width * scale));
-  const height = Math.max(1, Math.round(image.height * scale));
-  const canvas = document.createElement("canvas");
-  canvas.width = width;
-  canvas.height = height;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) throw new Error("Canvas is not available");
-  ctx.drawImage(image, 0, 0, width, height);
-  return canvas.toDataURL("image/webp", 0.84);
-}
-
-function loadImage(file: File): Promise<HTMLImageElement> {
-  return new Promise((resolve, reject) => {
-    const url = URL.createObjectURL(file);
-    const image = new Image();
-    image.onload = () => {
-      URL.revokeObjectURL(url);
-      resolve(image);
-    };
-    image.onerror = () => {
-      URL.revokeObjectURL(url);
-      reject(new Error("Image failed to load"));
-    };
-    image.src = url;
-  });
 }

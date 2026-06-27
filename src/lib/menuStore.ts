@@ -13,7 +13,8 @@ import {
   seedMenuInSupabase,
 } from "@/lib/supabase";
 
-const LS_KEY = "gruzin-menu-v1";
+const LS_KEY = "gruzin-menu-v2";
+const LEGACY_LS_KEYS = ["gruzin-menu-v1"];
 
 type SyncStatus = "local" | "syncing" | "ready" | "error";
 type State = {
@@ -35,6 +36,7 @@ function load(): State {
   } satisfies State;
   if (typeof window === "undefined") return fallback;
   try {
+    LEGACY_LS_KEYS.forEach((key) => window.localStorage.removeItem(key));
     const raw = window.localStorage.getItem(LS_KEY);
     if (!raw) return fallback;
     const parsed = JSON.parse(raw) as Partial<State>;

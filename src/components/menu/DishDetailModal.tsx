@@ -1,6 +1,6 @@
 import { Badge } from "@/components/ui/menu-badge";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
-import { FoodImage } from "@/components/menu/MenuItemCard";
+import { OptimizedFoodImage } from "@/components/menu/OptimizedFoodImage";
 import { categoryName, formatPrice, itemDesc, itemName, t } from "@/lib/translations";
 import type { Category, Lang, MenuItem } from "@/types/menu";
 
@@ -29,9 +29,11 @@ export function DishDetailModal({
         <DialogDescription className="sr-only">{t(lang, "dishDetails")}</DialogDescription>
 
         <div className="max-h-[92vh] overflow-y-auto sm:max-h-[90vh]">
-          <FoodImage
+          <OptimizedFoodImage
             src={item.image_url}
             alt={name}
+            variant="detail"
+            priority
             className="aspect-[4/3] rounded-none sm:aspect-[16/9]"
             imageClassName="group-hover:scale-100"
           />

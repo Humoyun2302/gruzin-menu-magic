@@ -15,6 +15,7 @@ import { ItemFormDialog } from "@/components/admin/ItemFormDialog";
 import { DeleteConfirm } from "@/components/admin/DeleteConfirm";
 import { menuStore, useMenuStore, getCategories } from "@/lib/menuStore";
 import { formatPrice } from "@/lib/translations";
+import { getOptimizedImageUrl } from "@/lib/imageUrls";
 import { toast } from "sonner";
 import type { MenuItem } from "@/types/menu";
 
@@ -132,7 +133,26 @@ function ItemsAdmin() {
             >
               <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-md bg-muted">
                 {i.image_url ? (
-                  <img src={i.image_url} alt="" className="h-full w-full object-cover" />
+                  <img
+                    src={getOptimizedImageUrl(i.image_url, {
+                      width: 120,
+                      height: 120,
+                      quality: 68,
+                      resize: "cover",
+                    })}
+                    alt=""
+                    width={56}
+                    height={56}
+                    loading="lazy"
+                    decoding="async"
+                    onError={(event) => {
+                      if (event.currentTarget.dataset.fallback !== "true") {
+                        event.currentTarget.dataset.fallback = "true";
+                        event.currentTarget.src = i.image_url;
+                      }
+                    }}
+                    className="h-full w-full object-cover"
+                  />
                 ) : (
                   <ImageIcon className="h-5 w-5 text-muted-foreground" />
                 )}
