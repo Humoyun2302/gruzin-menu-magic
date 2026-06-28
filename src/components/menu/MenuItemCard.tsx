@@ -62,7 +62,7 @@ export const MenuItemCard = memo(function MenuItemCard({
         <div className="mt-auto grid gap-2 border-t border-border/70 pt-2 md:gap-3 md:pt-3">
           <div className="flex items-end justify-between gap-2 md:gap-3">
             <span className="text-[16px] font-bold leading-none tracking-tight text-foreground md:text-base">
-              {formatPrice(item.price)}
+              {item.price > 0 ? formatPrice(item.price) : t(lang, "noPrice")}
             </span>
             {item.weight && (
               <span className="text-[11px] font-medium uppercase leading-none tracking-wide text-muted-foreground md:text-xs">

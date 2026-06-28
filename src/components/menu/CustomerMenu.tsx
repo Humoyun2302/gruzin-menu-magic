@@ -6,6 +6,7 @@ import { GruzinLogo } from "@/components/menu/GruzinLogo";
 import { MenuItemCard } from "@/components/menu/MenuItemCard";
 import { useMenuStore, getCategories, getItemsByCategory, searchMenuItems } from "@/lib/menuStore";
 import { categoryName, t, LANG_LABELS } from "@/lib/translations";
+import { CATEGORY_NOTES } from "@/data/menuData";
 import type { Lang, MenuItem } from "@/types/menu";
 import { cn } from "@/lib/utils";
 
@@ -182,6 +183,11 @@ export function CustomerMenu() {
                   <h2 className="mt-2 font-display text-[24px] font-bold leading-tight sm:text-[26px] md:mt-3 md:text-4xl">
                     {categoryName(c, lang)}
                   </h2>
+                  {CATEGORY_NOTES[c.id] && (
+                    <p className="mt-1 max-w-lg text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground md:mt-2 md:text-sm">
+                      {CATEGORY_NOTES[c.id]}
+                    </p>
+                  )}
                 </div>
                 <Grid>
                   {items.map((i, index) => (

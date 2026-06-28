@@ -59,7 +59,7 @@ export function DishDetailModal({
 
             <div className="flex flex-wrap items-end justify-between gap-3 rounded-xl border border-border bg-[color:var(--cream-deep)]/35 px-4 py-3">
               <div className="text-2xl font-bold tracking-tight text-foreground">
-                {formatPrice(item.price)}
+                {item.price > 0 ? formatPrice(item.price) : t(lang, "noPrice")}
               </div>
               {item.weight && (
                 <div className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">

@@ -89,8 +89,7 @@ export function ItemFormDialog({
   const errors = {
     categoryId: draft.categoryId ? "" : "Выберите категорию.",
     name_ru: draft.name_ru.trim() ? "" : "Введите название блюда.",
-    price:
-      priceValue && Number.isFinite(priceNumber) && priceNumber > 0 ? "" : "Введите цену больше 0.",
+    price: Number.isFinite(priceNumber) && priceNumber >= 0 ? "" : "Введите корректную цену.",
   };
   const isValid = !errors.categoryId && !errors.name_ru && !errors.price;
   const hasUnsavedChanges = JSON.stringify(draft) !== JSON.stringify(initialDraft);

@@ -1,6 +1,7 @@
 import type { Lang, Category } from "@/types/menu";
 
 export const formatPrice = (price: number): string => {
+  if (price <= 0) return "Новое меню";
   return `${price.toLocaleString("ru-RU").replace(/,/g, " ")} сум`;
 };
 
@@ -27,6 +28,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     category: "Категория",
     weight: "Вес",
     close: "Закрыть",
+    noPrice: "Новое меню",
   },
   uz: {
     subtitle: "Gruzin Restorani",
@@ -48,6 +50,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     category: "Kategoriya",
     weight: "Vazn",
     close: "Yopish",
+    noPrice: "Yangi menyu",
   },
   en: {
     subtitle: "Georgian Restaurant",
@@ -69,6 +72,7 @@ export const UI: Record<Lang, Record<string, string>> = {
     category: "Category",
     weight: "Weight",
     close: "Close",
+    noPrice: "New menu",
   },
 };
 
